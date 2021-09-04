@@ -1,6 +1,7 @@
 package com.example.neuron;
 
 import java.io.*;
+import java.nio.file.ClosedWatchServiceException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -15,40 +16,45 @@ public class Main {
     static double[][] w = new double[numOutputs][numHiddenNeurons+1];
     static HashMap<Integer, int[]> results = new HashMap<>();
 
-    static HashMap<Character, int[]> alpha = new HashMap<>() {{
-        put('A', new int[] {0, 0, 0, 0, 1});
-        put('B', new int[] {0, 0, 0, 1, 0});
-        put('C', new int[] {0, 0, 0, 1, 1});
-        put('D', new int[] {0, 0, 1, 0, 0});
-        put('E', new int[] {0, 0, 1, 0, 1});
-        put('F', new int[] {0, 0, 1, 1, 0});
-        put('G', new int[] {0, 0, 1, 1, 1});
-        put('H', new int[] {0, 1, 0, 0, 0});
-        put('I', new int[] {0, 1, 0, 0, 1});
-        put('J', new int[] {0, 1, 0, 1, 0});
-        put('K', new int[] {0, 1, 0, 1, 1});
-        put('L', new int[] {0, 1, 1, 0, 0});
-        put('M', new int[] {0, 1, 1, 0, 1});
-        put('N', new int[] {0, 1, 1, 1, 0});
-        put('O', new int[] {0, 1, 1, 1, 1});
-        put('P', new int[] {1, 0, 0, 0, 0});
-        put('Q', new int[] {1, 0, 0, 0, 1});
-        put('R', new int[] {1, 0, 0, 1, 0});
-        put('S', new int[] {1, 0, 0, 1, 1});
-        put('T', new int[] {1, 0, 1, 0, 0});
-        put('U', new int[] {1, 0, 1, 0, 1});
-        put('V', new int[] {1, 0, 1, 1, 0});
-        put('W', new int[] {1, 0, 1, 1, 1});
-        put('X', new int[] {1, 1, 0, 0, 0});
-        put('Y', new int[] {1, 1, 0, 0, 1});
-        put('Z', new int[] {1, 1, 0, 1, 0});
+    static HashMap<String, int[]> alpha = new HashMap<>() {{
+        put("A", new int[] {0, 0, 0, 0, 1});
+        put("B", new int[] {0, 0, 0, 1, 0});
+        put("C", new int[] {0, 0, 0, 1, 1});
+        put("D", new int[] {0, 0, 1, 0, 0});
+        put("E", new int[] {0, 0, 1, 0, 1});
+        put("F", new int[] {0, 0, 1, 1, 0});
+        put("G", new int[] {0, 0, 1, 1, 1});
+        put("H", new int[] {0, 1, 0, 0, 0});
+        put("I", new int[] {0, 1, 0, 0, 1});
+        put("J", new int[] {0, 1, 0, 1, 0});
+        put("K", new int[] {0, 1, 0, 1, 1});
+        put("L", new int[] {0, 1, 1, 0, 0});
+        put("M", new int[] {0, 1, 1, 0, 1});
+        put("N", new int[] {0, 1, 1, 1, 0});
+        put("O", new int[] {0, 1, 1, 1, 1});
+        put("P", new int[] {1, 0, 0, 0, 0});
+        put("Q", new int[] {1, 0, 0, 0, 1});
+        put("R", new int[] {1, 0, 0, 1, 0});
+        put("S", new int[] {1, 0, 0, 1, 1});
+        put("T", new int[] {1, 0, 1, 0, 0});
+        put("U", new int[] {1, 0, 1, 0, 1});
+        put("V", new int[] {1, 0, 1, 1, 0});
+        put("W", new int[] {1, 0, 1, 1, 1});
+        put("X", new int[] {1, 1, 0, 0, 0});
+        put("Y", new int[] {1, 1, 0, 0, 1});
+        put("Z", new int[] {1, 1, 0, 1, 0});
     }};
 
     public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(
+                new InputStreamReader(System.in));
 
         // Training
         readFile("TrainingData.txt");
         train();
+
+        System.out.println("Continue?");
+        reader.readLine();
 
         //region Validation
         patterns.clear();
@@ -86,13 +92,13 @@ public class Main {
             for (double y : x){
                 do {
                     y = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
-                } while (y == 0);
+                } while (y == 0.0);
             }
         for (double[] x : w)
             for (double y : x){
                 do {
                     y = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
-                } while (y == 0);
+                } while (y == 0.0);
             }
         //endregion
 
@@ -154,10 +160,10 @@ public class Main {
             double sum = 0; // output sum
             double sum2;    // hidden output sum
             // for each hidden neuron
-            for (int j = 0; j < w.length; j++) {
+            for (int j = 0; j < v.length; j++) {
                 sum2 = 0;
                 // for each input
-                for (int i = 0; i < v.length; i++)
+                for (int i = 0; i < z.length; i++)
                     sum2 += v[j][i] * z[i];
 
                 sum += w[k][j] * sum2;
@@ -176,17 +182,19 @@ public class Main {
             int patternCount = 0;
             while (reader.hasNextLine()) {
                 // Get result
-                StringBuilder line = new StringBuilder(reader.nextLine());
-                results.put(patternCount, alpha.get(line.toString()));
-
+                String line = reader.nextLine();
+                results.put(patternCount, alpha.get(line));
+                Character temp1 = line.charAt(0);
+                Character a = 'A';
+                int[] temp = alpha.get(temp1);
                 // Get pattern as string
-                line = new StringBuilder(reader.nextLine());
+                line = reader.nextLine();
                 for (int i = 0; i < 14; i++)
-                    line.append(",").append(reader.nextLine());
-                line.append(",1"); // bias input
+                    line += "," + reader.nextLine();
+                line += ",1"; // bias input
 
                 // Convert pattern to int[]
-                String[] patternString = line.toString().split(",");
+                String[] patternString = line.split(",");
                 int[] pattern = new int[numInputs + 1];
                 for (int i = 0; i < patternString.length; i++)
                     pattern[i] = Integer.parseInt(patternString[i]);
