@@ -88,25 +88,25 @@ public class Main {
     public static void train() {
         //region Initialise weights
         Random random = new Random();
-        for (double[] x : v)
-            for (double y : x){
+        for (int x = 0; x < v.length; x++)
+            for (int y = 0; y < v[x].length; y++){
                 do {
-                    y = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
-                } while (y == 0.0);
+                    v[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
+                } while (v[x][y] == 0);
             }
-        for (double[] x : w)
-            for (double y : x){
+        for (int x = 0; x < w.length; x++)
+            for (int y = 0; y < w[x].length; y++){
                 do {
-                    y = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
-                } while (y == 0.0);
+                    w[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
+                } while (w[x][y] == 0);
             }
         //endregion
 
         // Train
         double SSE = Double.MAX_VALUE;
         int count = 0;
-        double n = 0.0001;
-        while (SSE > 250) {
+        double n = 1;
+        while (SSE > 100 && count < 100) {
             SSE = 0;
             // for each pattern
             for (int p = 0; p < patterns.size()-1; p++) {
@@ -114,14 +114,14 @@ public class Main {
                 int[] expected = results.get(p);
                 // adjust each w
                 for (int k = 0; k < w.length; k++)
-                    for (int j = 0; j < w[k].length; j++) {
+                    for (int j = 0; j < v.length; j++) {
                         int[] o = run(z);
                         int y = y(z, j);
                         w[k][j] -= n * (-2 * (expected[k] - o[k]) * o[k] * (1 - o[k]) * y);
                     }
                 // adjust each v
                 for (int j = 0; j < v.length; j++)
-                    for (int i = 0; i < v[j].length; i++) {
+                    for (int i = 0; i < z.length; i++) {
                         int[] o = run(z);
                         int y = y(z, j);
                         double diff = 0;
@@ -141,13 +141,13 @@ public class Main {
             System.out.println(count + " iterations. SSE = " + SSE);
         }
 
-        System.out.println("Avg. SSE = " + SSE/count);
+        System.out.println("Avg. SSE = " + SSE/ patterns.size());
     }
 
-    public static int y(int[] z, int y) {
+    public static int y(int[] z, int j) {
         int sum = 0;
         for (int i = 0; i < z.length; i++)
-            sum += v[y][i] * z[i];
+            sum += v[j][i] * z[i];
 
         return sum;
     }
@@ -183,10 +183,10 @@ public class Main {
             while (reader.hasNextLine()) {
                 // Get result
                 String line = reader.nextLine();
+                char[] c = line.toCharArray();
+                line = Character.toString(c[c.length-1]);
                 results.put(patternCount, alpha.get(line));
-                Character temp1 = line.charAt(0);
-                Character a = 'A';
-                int[] temp = alpha.get(temp1);
+
                 // Get pattern as string
                 line = reader.nextLine();
                 for (int i = 0; i < 14; i++)
