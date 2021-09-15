@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 public class Main {
 
     static int numInputs = 15 * 7;
-    static int numHiddenNeurons = 1;
+    static int numHiddenNeurons = 20;
     static int numOutputs = 5;
 
     static HashMap<Integer, int[]> patterns = new HashMap<>();
@@ -63,25 +63,42 @@ public class Main {
 
         double SSE = 0;
         for (int p = 0; p < patterns.size(); p++) {
-            int[] o = run(patterns.get(p));
+            double[] o = run(patterns.get(p), false);
             double E = 0;
             for (int k = 0; k < o.length; k++)
                 E += Math.pow(results.get(p)[k] - o[k],2);
             SSE += 0.5 * E;
-            System.out.println(Arrays.toString(results.get(p)) + " - " + Arrays.toString(o));
+
+            int[] intO = new int[o.length];
+            for (int x = 0; x < intO.length; x++)
+                intO[x] = (int)o[x];
+            System.out.println(Arrays.toString(results.get(p)) + " - " + Arrays.toString(intO));
         }
         System.out.println("SSE = " + SSE);
         //endregion
+
+        System.out.println("Continue?");
+        reader.readLine();
 
         //region Testing
         patterns.clear();
         results.clear();
         readFile("TestData.txt");
 
-        for (int i = 0; i < patterns.size(); i++) {
-            int[] o = run(patterns.get(i));
-            System.out.println(Arrays.toString(o));
+        SSE = 0;
+        for (int p = 0; p < patterns.size(); p++) {
+            double[] o = run(patterns.get(p), false);
+            double E = 0;
+            for (int k = 0; k < o.length; k++)
+                E += Math.pow(results.get(p)[k] - o[k],2);
+            SSE += 0.5 * E;
+
+            int[] intO = new int[o.length];
+            for (int x = 0; x < intO.length; x++)
+                intO[x] = (int)o[x];
+            System.out.println(Arrays.toString(results.get(p)) + " - " + Arrays.toString(intO));
         }
+        System.out.println("SSE = " + SSE);
         //endregion
     }
 
@@ -94,19 +111,20 @@ public class Main {
                     v[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
                 } while (v[x][y] == 0);
             }
-        for (int x = 0; x < w.length; x++)
-            for (int y = 0; y < w[x].length; y++){
+        for (int x = 0; x < w.length; x++) {
+            for (int y = 0; y < w[x].length; y++) {
                 do {
                     w[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
                 } while (w[x][y] == 0);
             }
+        }
         //endregion
 
         // Train
         double SSE = Double.MAX_VALUE;
         int count = 0;
-        double n = 1;
-        while (SSE > 100 && count < 100) {
+        double n = 0.1;
+        while (SSE > 0.4) {
             SSE = 0;
             // for each pattern
             for (int p = 0; p < patterns.size()-1; p++) {
@@ -115,15 +133,15 @@ public class Main {
                 // adjust each w
                 for (int k = 0; k < w.length; k++)
                     for (int j = 0; j < v.length; j++) {
-                        int[] o = run(z);
-                        int y = y(z, j);
+                        double[] o = run(z, true);
+                        double y = y(z, j);
                         w[k][j] -= n * (-2 * (expected[k] - o[k]) * o[k] * (1 - o[k]) * y);
                     }
                 // adjust each v
                 for (int j = 0; j < v.length; j++)
                     for (int i = 0; i < z.length; i++) {
-                        int[] o = run(z);
-                        int y = y(z, j);
+                        double[] o = run(z, true);
+                        double y = y(z, j);
                         double diff = 0;
                         for (int k = 0; k < w.length; k++)
                             diff += -2 * (expected[k] - o[k]) * o[k] * (1 - o[k]) * w[k][j] * y * (1 - y) * z[i];
@@ -131,7 +149,7 @@ public class Main {
                     }
 
                 // Calculate Sum Squared Error
-                int[] o = run(z);
+                double[] o = run(z, true);
                 double E = 0;
                 for (int x = 0; x < o.length; x++)
                     E += Math.pow(expected[x] - o[x],2);
@@ -141,37 +159,38 @@ public class Main {
             System.out.println(count + " iterations. SSE = " + SSE);
         }
 
-        System.out.println("Avg. SSE = " + SSE/ patterns.size());
+        System.out.println("Avg. SSE = " + SSE/patterns.size());
     }
 
-    public static int y(int[] z, int j) {
-        int sum = 0;
+    public static double y(int[] z, int j) {
+        double sum = 0;
+        // for each input
         for (int i = 0; i < z.length; i++)
             sum += v[j][i] * z[i];
+        sum = sigmoid(sum);
 
         return sum;
     }
 
-    public static int[] run(int[] z) {
-        int[] o = new int[numOutputs];
+    public static double[] run(int[] z, boolean training) {
+        double[] o = new double[numOutputs];
 
         // For each output neuron
         for (int k = 0; k < o.length; k++) {
             double sum = 0; // output sum
-            double sum2;    // hidden output sum
             // for each hidden neuron
-            for (int j = 0; j < v.length; j++) {
-                sum2 = 0;
-                // for each input
-                for (int i = 0; i < z.length; i++)
-                    sum2 += v[j][i] * z[i];
+            for (int j = 0; j < v.length; j++)
+                sum += w[k][j] * y(z, j);
+            sum = sigmoid(sum);
 
-                sum += w[k][j] * sum2;
-            }
-            o[k] = Math.round((float)sum); // round because we only want 0 or 1
+            o[k] = training ? sum : Math.round((float)sum); // round final answers but not training because we only want 0 or 1
         }
 
         return o;
+    }
+
+    private static double sigmoid(double x){
+        return 1 / (1 + Math.pow(Math.E, -x));
     }
 
     public static void readFile(String fileName) {
