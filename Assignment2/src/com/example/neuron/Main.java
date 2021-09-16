@@ -131,7 +131,7 @@ public class Main {
         int count = 0;
         double n = 0.1;
         double tau = 1000;
-        while (SSE > 0.4) {
+        while (SSE > 1) {
             SSE = 0;
             //double n = n0 * Math.pow(Math.E, -count/tau); // Dynamic learning rate
             // for each pattern
