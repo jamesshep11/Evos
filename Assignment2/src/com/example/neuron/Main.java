@@ -130,8 +130,10 @@ public class Main {
         double SSE = Double.MAX_VALUE;
         int count = 0;
         double n = 0.1;
+        double tau = 1000;
         while (SSE > 0.4) {
             SSE = 0;
+            //double n = n0 * Math.pow(Math.E, -count/tau); // Dynamic learning rate
             // for each pattern
             for (int p = 0; p < patterns.size()-1; p++) {
                 int[] z = patterns.get(p);
