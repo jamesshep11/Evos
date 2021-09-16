@@ -105,16 +105,22 @@ public class Main {
     public static void train() {
         //region Initialise weights
         Random random = new Random();
+        double min = -1/Math.sqrt(numInputs);
+        double max = 1/Math.sqrt(numInputs);
+        // Initialize hidden weights
         for (int x = 0; x < v.length; x++)
             for (int y = 0; y < v[x].length; y++){
                 do {
                     v[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
+                    //v[x][y] = min + (max - min) * random.nextDouble();
                 } while (v[x][y] == 0);
             }
+        //Initialize output weights
         for (int x = 0; x < w.length; x++) {
             for (int y = 0; y < w[x].length; y++) {
                 do {
                     w[x][y] = random.nextDouble() * (Math.pow(-1, random.nextInt(2)));
+                    //w[x][y] = min + (max - min) * random.nextDouble();
                 } while (w[x][y] == 0);
             }
         }
