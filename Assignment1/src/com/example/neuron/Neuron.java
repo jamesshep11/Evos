@@ -37,7 +37,7 @@ public class Neuron {
         double SSE = Double.MAX_VALUE;
         int count = 0;
         double n = 0.0001;
-        while (SSE > 250 && count < 500) {
+        while (SSE > 250) {
             SSE = 0;
             // for each pattern
             for (int p = 0; p < weights.size(); p++) {
