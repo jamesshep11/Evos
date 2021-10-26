@@ -7,12 +7,14 @@ import java.util.*;
 public class Main {
 
     static int method = 1;
-    static int numParams = 15;
+    static int numParams = 7;
     static int populationSize = 100;
     static double selectionPressure = 0.1;
+    static double mutationRate = 0.5;
+    static double mutationMagnitude = 0.1;
 
     static HashMap<Integer, int[]> patterns = new HashMap<>();
-    static ArrayList<Integer> results;
+    static ArrayList<Integer> results = new ArrayList<>();
     static double[][] population = new double[populationSize][numParams];
     static double[] populationFitness = new double[populationSize];
 
@@ -20,7 +22,6 @@ public class Main {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(System.in));
 
-        // Training
         train();
 
         System.out.println("Continue?");
@@ -45,8 +46,8 @@ public class Main {
         // Several generation
         int genCount = 0;
         double avgSSE = getAvgFitness();
-        while(avgSSE > 50 && genCount++ < 1000) {
-            System.out.println("SSE = " + avgSSE);
+        while(avgSSE > 50 && genCount < 10000) {
+            System.out.println(genCount++ + " SSE = " + avgSSE);
 
             // Create next gen
             double[][] children = new double[populationSize][numParams];
@@ -65,6 +66,7 @@ public class Main {
 
             avgSSE = getAvgFitness();
         }
+        System.out.println(genCount + " SSE = " + avgSSE);
     }
 
     private static void evaluate() {
@@ -110,20 +112,18 @@ public class Main {
                 }
             }
 
-            System.out.println(salary);
+            System.out.println(Math.round(salary));
         }
     }
 
     // Generate random individuals as the initial population
     private static void generatePopulation() {
         Random random = new Random();
-        double min = -1/Math.sqrt(numParams);
-        double max = 1/Math.sqrt(numParams);
 
         for (int x = 0; x < populationSize; x++)
             for (int y = 0; y < numParams; y++)
                 do {
-                    population[x][y] = min + (max - min) * random.nextDouble();
+                    population[x][y] = random.nextGaussian();
                 } while (population[x][y] == 0);
     }
 
@@ -154,7 +154,7 @@ public class Main {
             SSE += Math.pow(expected - actual, 2);
         }
 
-        return SSE / patterns.size();
+        return SSE / patterns.size() / 10000;
     }
 
     // Select the single best parent from a number of random individuals in the population
@@ -174,13 +174,13 @@ public class Main {
     }
 
     private static double[] findFittestIndividual(double[][] population, double[] populationFitness) {
-        double maxFitness = Double.MIN_VALUE;
+        double minFitness = Double.MAX_VALUE;
         double[] fittestIndividual = new double[numParams];
 
         for(int i = 0; i < population.length; i++) {
             double fitness = populationFitness[i];
-            if (fitness > maxFitness) {
-                maxFitness = fitness;
+            if (fitness < minFitness) {
+                minFitness = fitness;
                 fittestIndividual = population[i];
             }
         }
@@ -195,12 +195,21 @@ public class Main {
 
         for (int i = 0; i < numParams; i++){
             if (rand.nextDouble() <= 0.5)
-                child[i] = parent1[i];
+                child[i] = parent1[i] + mutation();
             else
-                child[i] = parent2[i];
+                child[i] = parent2[i] + mutation();
         }
 
         return child;
+    }
+
+    // Generates a random mutation value based on the mutationRate and mutationMagnitude
+    private static double mutation() {
+        Random rand = new Random();
+        if (rand.nextDouble() <= mutationRate)
+            return rand.nextGaussian() * mutationMagnitude;
+
+        return 0;
     }
 
     // Calculate the average fitness of the whole population
@@ -226,14 +235,14 @@ public class Main {
                 String[] values = line.split(",");
 
                 // Get result
-                if (testing)
+                if (!testing)
                     results.add(Integer.parseInt(values[0]));
 
                 // Get pattern as string
-                int[] pattern = new int[values.length - 1];
-                int startValue = testing ? 1 : 0; // because test data doesn't start with the result
-                for (int i = startValue; i < pattern.length; i++)
-                    pattern[i] = Integer.parseInt(values[i]);
+                int[] pattern = new int[testing ? values.length : values.length - 1];
+                int startValue = testing ? 0 : 1; // because test data doesn't start with the result
+                for (int i = 0; i < pattern.length; i++)
+                    pattern[i] = Integer.parseInt(values[startValue++]);
 
                 patterns.put(patternCount++, pattern);
             }
