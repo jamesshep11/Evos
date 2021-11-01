@@ -10,7 +10,10 @@ public class Main {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(System.in));
 
-        GeneticAlgorithm algorithm = new GeneticAlgorithm(1);
+        /*GeneticAlgorithm algorithm = new GeneticAlgorithm(1);
+        algorithm.run();*/
+
+        DifferentialEvolution algorithm = new DifferentialEvolution(5);
         algorithm.run();
     }
 }
