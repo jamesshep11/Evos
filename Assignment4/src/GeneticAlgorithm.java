@@ -8,7 +8,7 @@ public class GeneticAlgorithm {
 
     int populationSize = 100;
     double selectionPressure = 0.1;
-    double mutationRate = 0.5;
+    double mutationRate = 0.6; // 0.1    0.001
     double mutationMagnitude = 0.1;
 
     ArrayList<ArrayList<Double>> population;
@@ -37,7 +37,7 @@ public class GeneticAlgorithm {
         // Several generation
         int genCount = 0;
         double avgfitness = getAvgFitness();
-        while(avgfitness > 1 && genCount < 1000) {
+        while(avgfitness > 1 && genCount < 10000) {
             System.out.println(genCount++ + " fitness = " + avgfitness);
 
             // Create next gen
