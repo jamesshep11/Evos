@@ -13,7 +13,10 @@ public class Main {
         /*GeneticAlgorithm algorithm = new GeneticAlgorithm(1);
         algorithm.run();*/
 
-        DifferentialEvolution algorithm = new DifferentialEvolution(5);
+        /*DifferentialEvolution algorithm = new DifferentialEvolution(5);
+        algorithm.run();*/
+
+        ParticleSwarm algorithm = new ParticleSwarm(5);
         algorithm.run();
     }
 }
