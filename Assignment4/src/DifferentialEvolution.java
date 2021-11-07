@@ -87,7 +87,7 @@ public class DifferentialEvolution {
             // Generate new individual's genes
             for (int y = 0; y < function.getDimension(); y++) {
                 do {
-                    gene = random.nextGaussian() * 5; // randomly generate new gene
+                    gene = (random.nextDouble() * 2 - 1) * 5; // randomly generate new gene
                 } while (gene == 0);
                 individual.add(gene); // add valid gene to individual
             }
