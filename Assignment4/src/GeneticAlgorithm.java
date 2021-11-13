@@ -8,7 +8,7 @@ public class GeneticAlgorithm {
 
     int populationSize = 100;
     double selectionPressure = 0.1;
-    double mutationRate = 0.6; // 0.1    0.001
+    double mutationRate = 0.6;
     double mutationMagnitude = 0.1;
 
     ArrayList<ArrayList<Double>> population;
@@ -36,13 +36,13 @@ public class GeneticAlgorithm {
 
         // Several generation
         int genCount = 0;
-        double avgfitness = getAvgFitness();
-        while(avgfitness > 1 && genCount < 10000) {
-            System.out.println(genCount++ + " fitness = " + avgfitness);
+        int fittestPos = findFittestIndividual(population, populationFitness);
+        while(genCount++ < 1000) {
+            System.out.println(populationFitness.get(fittestPos));
 
             // Create next gen
             ArrayList<ArrayList<Double>> children = new ArrayList<>();
-            children.add(findFittestIndividual(population, populationFitness)); // Elitism
+            children.add(population.get(fittestPos)); // Elitism
             for (int i = 1; i < populationSize; i++) {
                 ArrayList<Double> parent1 = tournamentSelection(selectionPressure);
                 ArrayList<Double> parent2 = tournamentSelection(selectionPressure);
@@ -56,9 +56,9 @@ public class GeneticAlgorithm {
             for(ArrayList<Double> individual : population)
                 populationFitness.add(checkFitness(individual));
 
-            avgfitness = getAvgFitness();
+            fittestPos = findFittestIndividual(population, populationFitness);
         }
-        System.out.println(genCount + " fitness = " + avgfitness);
+        System.out.println(populationFitness.get(fittestPos));
     }
 
     // Generate random individuals as the initial population
@@ -99,18 +99,20 @@ public class GeneticAlgorithm {
             tournamentFitness.add(populationFitness.get(pos));
         }
 
-        return findFittestIndividual(tournamentPopulation, tournamentFitness);
+        int fittestPos = findFittestIndividual(tournamentPopulation, tournamentFitness);
+        return tournamentPopulation.get(fittestPos);
     }
 
-    private ArrayList<Double> findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
+    // Find the position of the best individual
+    private int findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
         double minFitness = Double.MAX_VALUE;
-        ArrayList<Double> fittestIndividual = new ArrayList<>();
+        int fittestIndividual = 0;
 
         for(int i = 0; i < population.size(); i++) {
             double fitness = populationFitness.get(i);
             if (fitness < minFitness) {
                 minFitness = fitness;
-                fittestIndividual = population.get(i);
+                fittestIndividual = i;
             }
         }
 
@@ -140,14 +142,4 @@ public class GeneticAlgorithm {
 
         return 0;
     }
-
-    // Calculate the average fitness of the whole population
-    private double getAvgFitness() {
-        double totalFitness = 0;
-        for(Double fitness : populationFitness)
-            totalFitness += fitness;
-
-        return totalFitness/populationSize;
-    }
-
 }

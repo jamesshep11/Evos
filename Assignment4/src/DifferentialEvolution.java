@@ -7,8 +7,8 @@ public class DifferentialEvolution {
     ContinuousFunction function;
 
     int populationSize = 100;
-    double mutationRate = 1; // 0.1
-    double crossoverRate = 0.5;
+    double mutationRate = 1;
+    double crossoverRate = 0.9;
 
     ArrayList<ArrayList<Double>> population;
     ArrayList<Double> populationFitness;
@@ -37,13 +37,13 @@ public class DifferentialEvolution {
         // Several generation
         Random rand = new Random();
         int genCount = 0;
-        double avgFitness = getAvgFitness();
-        while(avgFitness > 1 && genCount < 10000) {
-            System.out.println(genCount++ + " fitness = " + avgFitness);
+        int fittestPos = findFittestIndividual(population, populationFitness);
+        while(genCount++ < 1000) {
+            System.out.println(populationFitness.get(fittestPos));
 
             // Create next gen
             ArrayList<ArrayList<Double>> children = new ArrayList<>();
-            children.add(findFittestIndividual(population, populationFitness)); // Elitism
+            children.add(population.get(fittestPos)); // Elitism
             for (int i = 1; i < populationSize; i++) {
                 ArrayList<Double> cur = population.get(i);
 
@@ -71,9 +71,9 @@ public class DifferentialEvolution {
             for(ArrayList<Double> individual : population)
                 populationFitness.add(checkFitness(individual));
 
-            avgFitness = getAvgFitness();
+            fittestPos = findFittestIndividual(population, populationFitness);
         }
-        System.out.println(genCount + " fitness = " + avgFitness);
+        System.out.println(populationFitness.get(fittestPos));
     }
 
     // Generate random individuals as the initial population
@@ -106,21 +106,21 @@ public class DifferentialEvolution {
         return mutant;
     }
 
-
     // Calculate the fitness of an individual
     private double checkFitness(ArrayList<Double> individual) {
         return function.evaluate(individual);
     }
 
-    private ArrayList<Double> findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
+    // Finds the position of the fittest individual
+    private int findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
         double minFitness = Double.MAX_VALUE;
-        ArrayList<Double> fittestIndividual = new ArrayList<>();
+        int fittestIndividual = 0;
 
         for(int i = 0; i < population.size(); i++) {
             double fitness = populationFitness.get(i);
             if (fitness < minFitness) {
                 minFitness = fitness;
-                fittestIndividual = population.get(i);
+                fittestIndividual = i;
             }
         }
 
@@ -141,15 +141,6 @@ public class DifferentialEvolution {
         }
 
         return child;
-    }
-
-    // Calculate the average fitness of the whole population
-    private double getAvgFitness() {
-        double totalFitness = 0;
-        for(Double fitness : populationFitness)
-            totalFitness += fitness;
-
-        return totalFitness/populationSize;
     }
 
     private ArrayList<Double> vectorDiff(ArrayList<Double> v1, ArrayList<Double> v2){

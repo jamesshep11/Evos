@@ -39,13 +39,15 @@ public class ParticleSwarm {
         populationFitness.clear();
         for(ArrayList<Double> individual : population)
             populationFitness.add(checkFitness(individual));
-        globalBest = findFittestIndividual(population, populationFitness); // initialize global best
+
+        // Initialize global best
+        int fittestPos = findFittestIndividual(population,populationFitness);
+        globalBest = population.get(fittestPos);
 
         // Start swarming
         int genCount = 0;
-        double avgFitness = getAvgFitness();
-        while(avgFitness > 1 && genCount < 1000) {
-            System.out.println(genCount++ + " fitness = " + avgFitness);
+        while(genCount++ < 1000) {
+            System.out.println(populationFitness.get(fittestPos));
 
             // Update population positions
             for (int i = 1; i < populationSize; i++) {
@@ -57,8 +59,10 @@ public class ParticleSwarm {
                 if (checkFitness(x) < checkFitness(personalBests.get(i)))
                     personalBests.set(i, x);
                 // Update global best
-                if (checkFitness(personalBests.get(i)) < checkFitness(globalBest))
+                if (checkFitness(personalBests.get(i)) < populationFitness.get(fittestPos)) {
                     globalBest = personalBests.get(i);
+                    fittestPos = i;
+                }
 
                 // Move individual one dimension at a time
                 Random rand = new Random();
@@ -66,17 +70,15 @@ public class ParticleSwarm {
                     double r1 = rand.nextDouble(); // randomizer 1
                     double r2 = rand.nextDouble(); // randomizer 2
 
-                    // Calculate new velocity component and update individual
+                    // Calculate new velocity dimension and update individual
                     double newVelocity = (w * v.get(j)) + (c1 * r1 * (y.get(j) - x.get(j))) + (c2 * r2 * (globalBest.get(j) - x.get(j)));
                     x.set(j, x.get(j) + newVelocity);
                 }
                 // Check individual's fitness
                 populationFitness.set(i, checkFitness(x));
             }
-
-            avgFitness = getAvgFitness();
         }
-        System.out.println(genCount + " fitness = " + avgFitness);
+        System.out.println(populationFitness.get(fittestPos));
     }
 
     // Generate random individuals as the initial population
@@ -108,28 +110,20 @@ public class ParticleSwarm {
         return function.evaluate(individual);
     }
 
-    private ArrayList<Double> findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
+    // Finds the position of the fittest individual
+    private int findFittestIndividual(ArrayList<ArrayList<Double>> population, ArrayList<Double> populationFitness) {
         double minFitness = Double.MAX_VALUE;
-        ArrayList<Double> fittestIndividual = new ArrayList<>();
+        int fittestIndividual = 0;
 
         for(int i = 0; i < population.size(); i++) {
             double fitness = populationFitness.get(i);
             if (fitness < minFitness) {
                 minFitness = fitness;
-                fittestIndividual = population.get(i);
+                fittestIndividual = i;
             }
         }
 
         return fittestIndividual;
-    }
-
-    // Calculate the average fitness of the whole population
-    private double getAvgFitness() {
-        double totalFitness = 0;
-        for(Double fitness : populationFitness)
-            totalFitness += fitness;
-
-        return totalFitness/populationSize;
     }
 
 }
