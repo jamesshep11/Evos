@@ -7,9 +7,9 @@ public class ParticleSwarm {
     ContinuousFunction function;
 
     int populationSize = 150;
-    double w = 1;
-    double c1 = 0.9;
-    double c2 = 0.1;
+    double w = 0.1;
+    double c1 = 0.99;
+    double c2 = 0.01;
 
     ArrayList<ArrayList<Double>> population;
     ArrayList<ArrayList<Double>> populationVelocity;
@@ -72,6 +72,7 @@ public class ParticleSwarm {
 
                     // Calculate new velocity dimension and update individual
                     double newVelocity = (w * v.get(j)) + (c1 * r1 * (y.get(j) - x.get(j))) + (c2 * r2 * (globalBest.get(j) - x.get(j)));
+                    v.set(j, newVelocity);
                     x.set(j, x.get(j) + newVelocity);
                 }
                 // Check individual's fitness
