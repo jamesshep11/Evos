@@ -1,7 +1,6 @@
 package com.example.neuron;
 
 import java.io.*;
-import java.nio.file.ClosedWatchServiceException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -20,9 +19,9 @@ public class Main {
         String fileName = console.readLine();
         readFile(fileName);
 
-        // Train neuron using gradient decent method
-        Neuron neuron = new Neuron();
-        neuron.gradientDescent(patterns, results);
+        // Train neuron
+        Neuron neuron = new Neuron(patterns.get(0).size());
+        neuron.train(patterns, results);
 
         System.out.println("Training complete \n");
 
@@ -36,11 +35,13 @@ public class Main {
 
         // Use neuron to process test data and evaluate accuracy of neuron after training
         double SSE = 0;
+
         for (int i = 0; i < patterns.size(); i++) {
             int mark = neuron.run(patterns.get(i));
             SSE += Math.pow(results.get(i) - mark,2);
             System.out.println(results.get(i) + " - " + mark);
         }
+
         System.out.println("SSE = " + SSE);
 
         patterns.clear();

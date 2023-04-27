@@ -5,16 +5,20 @@ import java.nio.file.ClosedWatchServiceException;
 import java.util.*;
 import java.util.stream.Stream;
 
+// TODO: Watch video again and rework solution from scratch
+//  https://www.youtube.com/watch?v=Ilg3gGewQ5U&t=7s&ab_channel=3Blue1Brown
+//  Try it with recursion (loop/iteration per layer? Train on the way back)
 public class Main {
 
-    static int numInputs = 15 * 7;
+    // Initialize variables
+    static int numInputs = 15 * 7; // based on grid dimensions
     static int numHiddenNeurons = 20;
     static int numOutputs = 5;
 
-    static HashMap<Integer, int[]> patterns = new HashMap<>();
-    static double[][] v = new double[numHiddenNeurons][numInputs+1];
-    static double[][] w = new double[numOutputs][numHiddenNeurons+1];
-    static HashMap<Integer, int[]> results = new HashMap<>();
+    static HashMap<Integer, int[]> patterns = new HashMap<>(); // input values
+    static double[][] v = new double[numHiddenNeurons][numInputs+1]; // hidden layer weights
+    static double[][] w = new double[numOutputs][numHiddenNeurons+1]; // output layer weights
+    static HashMap<Integer, int[]> results = new HashMap<>(); // expected (correct) results
 
     static HashMap<String, int[]> alpha = new HashMap<>() {{
         put("A", new int[] {0, 0, 0, 0, 1});
@@ -107,6 +111,7 @@ public class Main {
         Random random = new Random();
         double min = -1/Math.sqrt(numInputs);
         double max = 1/Math.sqrt(numInputs);
+
         // Initialize hidden weights
         for (int x = 0; x < v.length; x++)
             for (int y = 0; y < v[x].length; y++){
@@ -115,6 +120,7 @@ public class Main {
                     //v[x][y] = min + (max - min) * random.nextDouble();
                 } while (v[x][y] == 0);
             }
+
         //Initialize output weights
         for (int x = 0; x < w.length; x++) {
             for (int y = 0; y < w[x].length; y++) {
@@ -126,18 +132,22 @@ public class Main {
         }
         //endregion
 
-        // Train
+        // Start training
         double SSE = Double.MAX_VALUE;
         int count = 0;
         double n = 0.1;
-        double tau = 1000;
+        double tau = 1000; // used for dynamic learning rate
+
+        // While error is too big
         while (SSE > 1) {
             SSE = 0;
             //double n = n0 * Math.pow(Math.E, -count/tau); // Dynamic learning rate
+
             // for each pattern
             for (int p = 0; p < patterns.size()-1; p++) {
-                int[] z = patterns.get(p);
+                int[] z = patterns.get(p); // input values
                 int[] expected = results.get(p);
+
                 // adjust each w
                 for (int k = 0; k < w.length; k++)
                     for (int j = 0; j < v.length; j++) {
@@ -145,24 +155,30 @@ public class Main {
                         double y = y(z, j);
                         w[k][j] -= n * (-2 * (expected[k] - o[k]) * o[k] * (1 - o[k]) * y);
                     }
+
                 // adjust each v
                 for (int j = 0; j < v.length; j++)
                     for (int i = 0; i < z.length; i++) {
                         double[] o = run(z, true);
                         double y = y(z, j);
                         double diff = 0;
+
                         for (int k = 0; k < w.length; k++)
                             diff += -2 * (expected[k] - o[k]) * o[k] * (1 - o[k]) * w[k][j] * y * (1 - y) * z[i];
+
                         v[j][i] -= n * diff;
                     }
 
-                // Calculate Sum Squared Error
+                // Calculate Sum of Squared Error
                 double[] o = run(z, true);
                 double E = 0;
+
                 for (int x = 0; x < o.length; x++)
                     E += Math.pow(expected[x] - o[x],2);
+
                 SSE += 0.5 * E;
             }
+
             count++;
             System.out.println(count + " iterations. SSE = " + SSE);
         }
@@ -170,11 +186,20 @@ public class Main {
         System.out.println("Avg. SSE = " + SSE/patterns.size());
     }
 
+    /**
+     * Calculates the output of the hidden layer neurons using the sigmoid activation function
+     *
+     * @param z Input values
+     * @param j Hidden layer neuron index
+     * @return Neuron output
+     */
     public static double y(int[] z, int j) {
         double sum = 0;
-        // for each input
+
+        // for each input value
         for (int i = 0; i < z.length; i++)
             sum += v[j][i] * z[i];
+
         sum = sigmoid(sum);
 
         return sum;
@@ -186,9 +211,11 @@ public class Main {
         // For each output neuron
         for (int k = 0; k < o.length; k++) {
             double sum = 0; // output sum
+
             // for each hidden neuron
             for (int j = 0; j < v.length; j++)
                 sum += w[k][j] * y(z, j);
+
             sum = sigmoid(sum);
 
             o[k] = training ? sum : Math.round((float)sum); // round final answers but not training because we only want 0 or 1
@@ -197,16 +224,28 @@ public class Main {
         return o;
     }
 
+    /**
+     * Sigmoid function ensures output is between 0 and 1
+     *
+     * @param x Input value
+     * @return Condensed value between 0 and 1
+     */
     private static double sigmoid(double x){
         return 1 / (1 + Math.pow(Math.E, -x));
     }
 
+    /**
+     * Reads input file, saves expected results and converts grid letter input into int[]
+     *
+     * @param fileName Name of input file
+     */
     public static void readFile(String fileName) {
         try {
             File file = new File(fileName);
             Scanner reader = new Scanner(file);
 
             int patternCount = 0;
+
             while (reader.hasNextLine()) {
                 // Get result
                 String line = reader.nextLine();
@@ -216,18 +255,22 @@ public class Main {
 
                 // Get pattern as string
                 line = reader.nextLine();
+
                 for (int i = 0; i < 14; i++)
                     line += "," + reader.nextLine();
+
                 line += ",1"; // bias input
 
                 // Convert pattern to int[]
                 String[] patternString = line.split(",");
                 int[] pattern = new int[numInputs + 1];
+
                 for (int i = 0; i < patternString.length; i++)
                     pattern[i] = Integer.parseInt(patternString[i]);
 
                 patterns.put(patternCount++, pattern);
             }
+
             reader.close();
         } catch (FileNotFoundException e) {
             System.out.println("Error reading from file.");
