@@ -19,7 +19,7 @@ public class Helper {
         ArrayList<Double> weights = new ArrayList<>();
 
         // Initialise weights to small random values
-        for (int i = 0; i < size-1; i++)
+        for (int i = 0; i < size; i++)
             weights.add(random.nextDouble() * (Math.pow(-1,random.nextInt(2))));
 
         return weights;
